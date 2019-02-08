@@ -3,10 +3,12 @@
         "target": "es6",
         "outDir": "app/js",
         "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "noUnusedParameters": false,
         "noEmitOnError": true,
         "noImplicitAny": true,
-        "removeComments": true
+        "removeComments": true,
+        "module": "system",
+        "experimentalDecorators": true
     },
     "include": [
         "app/ts/**/*"

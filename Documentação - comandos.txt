@@ -1,0 +1,28 @@
+Comandos importantes:
+
+* Verificar package.json, pois vários comandos foram definidos lá (exemplo, start, compile, server, watch e etc.)
+
+// Inicia o NPM
+npm init
+
+// Compila e Gera o JS do TS
+npm run compile -- compile está definido em package.json
+
+// Faz a mesma coisa do comando acima, mas de forma contínua
+npm start -- start está definido em package.json como "tsc -w"
+
+// Faz a importação do jquery para a lib do typescript
+ npm install @types/jquery@2.0.42 --save-dev
+
+// Site com libs com definitions files (tsd) que podem ser importados
+ https://www.npmjs.com/
+ exemplo para o jquery:
+ https://www.npmjs.com/package/@types/jquery
+
+// Instala o lite-server, um browser sync que atualiza o navegador assim que os arquivos são modificados
+npm install lite-server@2.3.0 --save-dev
+
+// Instala o concurrently para execução em paralelo do npm watch e do lite-server
+npm install concurrently@3.4.0 --save-dev
+    configurar o start assim: "start": "concurrently \"npm run watch\" \"npm run server\""
+npm start
