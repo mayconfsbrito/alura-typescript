@@ -1,6 +1,8 @@
 import { NegociacoesView, MensagemView } from '../views/index';
-import { Negociacoes, Negociacao, NegociacaoParcial } from './../models/index';
+import { Negociacoes, Negociacao } from './../models/index';
 import { domInject, throttle } from './../helpers/decorators/index';
+import { NegociacaoService } from './../services/index';
+import { imprime } from './../helpers/index';
 
 export class NegociacaoController {
 
@@ -16,13 +18,14 @@ export class NegociacaoController {
     private _negociacoes = new Negociacoes();
     private _negociacoesView = new NegociacoesView("#negociacoesView");
     private _mensagemView = new MensagemView("#mensagemView");
+    private _negociacaoService = new NegociacaoService();
 
     constructor() {
         this._negociacoesView.update(this._negociacoes);
     }
 
     @throttle(500)
-    adiciona(): void {
+    public adiciona(): void {
         
         let data = new Date(this._inputData.val().replace(/-/g, ','));
 
@@ -37,36 +40,42 @@ export class NegociacaoController {
             parseFloat(this._inputValor.val())
         );
 
+        imprime(negociacao, this._negociacoes);
+        
         this._negociacoes.adiciona(negociacao);
         this._negociacoesView.update(this._negociacoes);
         this._mensagemView.update("Negociação adicionada com sucesso!");
     }
 
-    private _ehDiaUtil(data: Date) {
-        return data.getDay() != DiaDaSemana.Domingo && data.getDay() != DiaDaSemana.Sabado;
+    @throttle(500)
+    public async importarDados() {
+
+        try {
+            const negociacoesParaImportar = await this._negociacaoService
+                .obterNegociacoes(res => {
+                    if (res.ok) {
+                        return res;
+                    } else {
+                        throw new Error(res.statusText);
+                    }
+                })
+            const negociacoesJaImportadas = this._negociacoes.paraArray();
+
+            negociacoesParaImportar
+                .filter((negociacao: Negociacao) =>
+                    !negociacoesJaImportadas.some(jaImportada =>
+                        negociacao.ehIgual(jaImportada)))
+                .forEach((negociacao: Negociacao) =>
+                    this._negociacoes.adiciona(negociacao));
+
+            this._negociacoesView.update(this._negociacoes);
+        } catch(err) {
+            this._negociacoesView.update(err.message);
+        }
     }
 
-    @throttle(500)
-    importarDados() {
-
-        function isOk(res: Response) {
-            if (res.ok) {
-                return res;
-            } else {
-                throw new Error(res.statusText);
-            }
-        }
-
-        fetch('http://localhost:8080/dados')
-            .then(res => isOk(res))
-            .then(res => res.json())
-            .then((dados: NegociacaoParcial[]) => {
-                dados
-                    .map(dado => new Negociacao(new Date(), dado.vezes, dado.montante))
-                    .forEach(negociacao => this._negociacoes.adiciona(negociacao))
-                this._negociacoesView.update(this._negociacoes)
-            })
-            .catch(err => console.log(err.message));
+    private _ehDiaUtil(data: Date) {
+        return data.getDay() != DiaDaSemana.Domingo && data.getDay() != DiaDaSemana.Sabado;
     }
 }
 
